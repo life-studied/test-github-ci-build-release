@@ -23,6 +23,7 @@ jobs:
       - name: package release content
         run: |
           cd /tmp/release
+          mkdir -p /tmp/release-zip
           zip -r /tmp/release-zip/release.zip ./*
           mkdir -p /tmp/release-zip-split
           split -b 25m -d release.zip /tmp/release-zip-split/release.zip.part
@@ -42,7 +43,7 @@ jobs:
           git rm -rf .
           cp -r /tmp/release-zip-split/* .
           git add .
-          git commit -m "Release $(date +%Y%m%d%H%M%S)"
+          git commit -m "Release $(date +%Y-%m-%d-%H-%M-%S)"
           git push origin release --force
 
       - name: Upload Release
