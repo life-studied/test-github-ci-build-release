@@ -20,6 +20,13 @@ jobs:
       - name: Build release content
         run: python .github/scripts/rls-generate.py  # 脚本输出到 /tmp/release
 
+      - name: package release content
+        run: |
+          cd /tmp/release
+          zip -r /tmp/release-zip/release.zip ./*
+          mkdir -p /tmp/release-zip-split
+          split -b 25m -d release.zip /tmp/release-zip-split/release.zip.part
+
       - name: config git
         run: |
           git config user.name "github-actions[bot]"
@@ -33,12 +40,12 @@ jobs:
         run: |
           git checkout --orphan release
           git rm -rf .
-          zip -r $GITHUB_WORKSPACE/release.zip /tmp/release
+          cp -r /tmp/release-zip-split/* .
           git add .
           git commit -m "Release $(date +%Y%m%d%H%M%S)"
           git push origin release --force
-          
+
       - name: Upload Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "$(date +%Y%m%d%H%M%S)" release.zip --generate-notes
+        run: gh release create "$(date +%Y-%m-%d-%H-%M-%S)" /tmp/release-zip/release.zip --generate-notes
