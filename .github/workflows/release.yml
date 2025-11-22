@@ -15,7 +15,7 @@ jobs:
 
       - uses: actions/setup-python@v5  # 确保Python环境可用
         with:
-          python-version: '3.x'
+          python-version: '3.12'
 
       - name: Build release content
         run: python .github/scripts/rls-generate.py  # 脚本输出到 /tmp/release
