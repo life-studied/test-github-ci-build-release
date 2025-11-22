@@ -1,0 +1,44 @@
+name: Generate Release Template
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4  # 检出仓库代码到 $GITHUB_WORKSPACE
+
+      - uses: actions/setup-python@v5  # 确保Python环境可用
+        with:
+          python-version: '3.x'
+
+      - name: Build release content
+        run: python .github/scripts/rls-generate.py  # 脚本输出到 /tmp/release
+
+      - name: config git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: delete old release branch
+        run: |
+          git branch -D release || true
+    
+      - name: create new orphan release branch
+        run: |
+          git checkout --orphan release
+          git rm -rf .
+          zip -r $GITHUB_WORKSPACE/release.zip /tmp/release
+          git add .
+          git commit -m "Release $(date +%Y%m%d%H%M%S)"
+          git push origin release --force
+          
+      - name: Upload Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$(date +%Y%m%d%H%M%S)" release.zip --generate-notes
